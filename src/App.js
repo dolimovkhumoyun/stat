@@ -3,6 +3,7 @@ import { Route, Switch } from "react-router-dom";
 
 import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
+import "react-toastify/dist/ReactToastify.css";
 
 class App extends Component {
   // state = {  }

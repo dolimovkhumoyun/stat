@@ -1,14 +1,13 @@
 import React, { useState } from "react";
 
-const useLoginForm = callback => {
+const useLoginForm = (props, callback) => {
   const [inputs, setInputs] = useState({});
 
   const handleSubmit = e => {
     if (e) {
       e.preventDefault();
     }
-    // console.log(inputs);
-    callback();
+    callback(props);
   };
 
   const handleInputChange = e => {

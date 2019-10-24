@@ -15,6 +15,8 @@ import Container from "@material-ui/core/Container";
 
 import React, { useState } from "react";
 import useLoginForm from "../hooks/CustomHooks";
+import { socket } from "../redux/middleWares";
+import { toast, ToastContainer } from "react-toastify";
 
 function Copyright() {
   return (
@@ -54,15 +56,27 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-export default function Login() {
+export default function Login(props) {
   const classes = useStyles();
-  const login = () => {
-    console.log("sdf");
+
+  const auth = props => {
+    const { username, password } = inputs;
+    socket.emit("login", { username, password });
+    socket.once("login", data => {
+      if (data.success) {
+        localStorage.setItem("token", data.token);
+        props.history.push("/dashboard");
+      } else {
+        toast.error("Бундай фойдаланувчи мавжуд эмас.");
+      }
+    });
   };
-  const { inputs, handleInputChange, handleSubmit } = useLoginForm(login);
+
+  const { inputs, handleInputChange, handleSubmit } = useLoginForm(props, auth);
 
   return (
     <Container component="main" maxWidth="xs">
+      <ToastContainer position="top-center" />
       <CssBaseline />
       <div className={classes.paper}>
         <Avatar className={classes.avatar}></Avatar>
@@ -81,7 +95,7 @@ export default function Login() {
             autoComplete="off"
             autoFocus
             onChange={handleInputChange}
-            value={inputs.username}
+            value={inputs.username || ""}
           />
           <TextField
             variant="outlined"
@@ -94,7 +108,7 @@ export default function Login() {
             id="password"
             autoComplete="new-password"
             onChange={handleInputChange}
-            value={inputs.password}
+            value={inputs.password || ""}
           />
           <FormControlLabel
             control={<Checkbox value="remember" color="primary" />}

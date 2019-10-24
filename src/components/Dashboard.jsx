@@ -1,4 +1,3 @@
-import React from "react";
 import clsx from "clsx";
 import { makeStyles } from "@material-ui/core/styles";
 import CssBaseline from "@material-ui/core/CssBaseline";
@@ -17,10 +16,15 @@ import Link from "@material-ui/core/Link";
 import MenuIcon from "@material-ui/icons/Menu";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import NotificationsIcon from "@material-ui/icons/Notifications";
-// import { mainListItems, secondaryListItems } from "./listItems";
+import { mainListItems, secondaryListItems } from "./common/List";
 // import Chart from "./Chart";
 // import Deposits from "./Deposits";
 // import Orders from "./Orders";
+
+import React, { useEffect } from "react";
+import { connect } from "react-redux";
+import { getRegions } from "../redux/actions";
+import SearchBar from "./common/SearchBar";
 
 function Copyright() {
   return (
@@ -116,7 +120,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-export default function Dashboard() {
+function Dashboard(props) {
   const classes = useStyles();
   const [open, setOpen] = React.useState(true);
   const handleDrawerOpen = () => {
@@ -126,6 +130,10 @@ export default function Dashboard() {
     setOpen(false);
   };
   const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
+
+  useEffect(() => {
+    props.getRegions();
+  }, []);
 
   return (
     <div className={classes.root}>
@@ -176,7 +184,8 @@ export default function Dashboard() {
           </IconButton>
         </div>
         <Divider />
-        {/* <List>{mainListItems}</List> */}
+        <List>{mainListItems}</List>
+
         <Divider />
         {/* <List>{secondaryListItems}</List> */}
       </Drawer>
@@ -184,17 +193,19 @@ export default function Dashboard() {
         <div className={classes.appBarSpacer} />
         <Container maxWidth="lg" className={classes.container}>
           <Grid container spacing={3}>
-            {/* Chart */}
-            <Grid item xs={12} md={8} lg={9}>
-              <Paper className={fixedHeightPaper}>{/* <Chart /> */}</Paper>
+            <Grid item xs={12}>
+              {/* *** Search DIV*** */}
+              <Paper className={classes.paper}>
+                <SearchBar />
+              </Paper>
             </Grid>
-            {/* Recent Deposits */}
+            {/* *** Regions DIV */}
             <Grid item xs={12} md={4} lg={3}>
               <Paper className={fixedHeightPaper}>{/* <Deposits /> */}</Paper>
             </Grid>
-            {/* Recent Orders */}
-            <Grid item xs={12}>
-              <Paper className={classes.paper}>{/* <Orders /> */}</Paper>
+            {/* *** Table DIV *** */}
+            <Grid item xs={12} md={8} lg={9}>
+              <Paper className={fixedHeightPaper}>{/* <Chart /> */}</Paper>
             </Grid>
           </Grid>
         </Container>
@@ -203,3 +214,16 @@ export default function Dashboard() {
     </div>
   );
 }
+
+const mapStateToProps = ({ regions }) => ({
+  regions
+});
+
+const mapDispatchToProps = dispatch => ({
+  getRegions: () => dispatch(getRegions())
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Dashboard);

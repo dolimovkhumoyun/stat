@@ -1,0 +1,4 @@
+const GET_REGIONS = "GET_REGIONS";
+const SET_REGIONS = "SET_REGIONS";
+
+export { GET_REGIONS, SET_REGIONS };

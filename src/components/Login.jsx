@@ -70,6 +70,9 @@ export default function Login(props) {
         toast.error("Бундай фойдаланувчи мавжуд эмас.");
       }
     });
+    socket.on("err", data => {
+      console.log(data);
+    });
   };
 
   const { inputs, handleInputChange, handleSubmit } = useLoginForm(props, auth);

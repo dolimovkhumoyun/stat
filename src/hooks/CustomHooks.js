@@ -18,7 +18,6 @@ const useLoginForm = (props, callback) => {
 
   const handleInputChange = e => {
     e.persist();
-    console.log(e.target);
     if (
       e.target.name === "regions" &&
       _.indexOf(e.target.value, "-1") != -1 &&

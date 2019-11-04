@@ -70,7 +70,7 @@ export default function Login(props) {
         toast.error("Бундай фойдаланувчи мавжуд эмас.");
       }
     });
-    socket.on("err", data => {
+    socket.once("err", data => {
       console.log(data);
     });
   };

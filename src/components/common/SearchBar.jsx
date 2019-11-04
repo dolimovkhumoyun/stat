@@ -41,13 +41,14 @@ const useStyles = makeStyles(theme => ({
   selectEmpty: {
     marginTop: theme.spacing(2)
   },
-  item: {
+  normalItem: {
     paddingLeft: 30,
     fontWeight: theme.typography.fontWeightMedium
   },
   group: {
     fontWeight: theme.typography.fontWeightBold,
-    opacity: 1
+    opacity: 1,
+    display: "none"
   },
   fab: {
     margin: theme.spacing(1)
@@ -87,6 +88,7 @@ const SearchBar = props => {
   } = useLoginForm(props);
   const [startDate, setStartDate] = useState(startOfDay);
   const [endDate, setEndDate] = useState(endOfDay);
+  const [posts, setPosts] = useState([]);
 
   useEffect(() => {
     props.getRegions();
@@ -121,16 +123,33 @@ const SearchBar = props => {
     return _.join(d, ", ");
   };
   const onChange = e => {
-    console.log(e.target);
+    console.log(e);
   };
 
   const postSelect = posts => {
     console.log(posts);
   };
 
+  const onMultiSelectClick = ({ target: input }) => {
+    let tmp = posts;
+    var index = tmp.indexOf(input.value);
+    if (index > -1) {
+      console.log("found");
+      tmp.splice(index, 1);
+
+      setPosts(tmp);
+    } else {
+      console.log("not found");
+      setPosts(posts => [...posts, input.value]);
+    }
+  };
+  const onSubmit = e => {
+    console.log(e);
+  };
+  console.log(posts);
   return (
     <React.Fragment>
-      <form className={classes.root} autoComplete="off">
+      <form className={classes.root} autoComplete="off" onSubmit={onSubmit}>
         <FormControl className={classes.formControl}>
           <InputLabel shrink htmlFor="age-label-placeholder">
             Type
@@ -237,33 +256,36 @@ const SearchBar = props => {
             displayEmpty={true}
             input={<Input id="select-multiple-checkbox" />}
             name="posts"
-            value={inputs.posts || []}
-            onChange={onChange}
+            value={posts || []}
+            // onChange={onChange}
           >
             {props.posts.map(post => {
-              return (
-                <div>
+              if (post.options[0].isOptGroup === undefined) {
+                post.options.splice(0, 0, {
+                  value: post.label,
+                  label: post.label,
+                  isOptGroup: true
+                });
+              }
+              return post.options.map(option => {
+                return (
                   <MenuItem
-                    key={post.label}
-                    value={post.label}
-                    disabled
-                    className={classes.group}
+                    key={option.value}
+                    value={option.value}
+                    className={
+                      option.isOptGroup
+                        ? classes.disabledItem
+                        : classes.normalItem
+                    }
+                    disabled={option.isOptGroup}
                   >
-                    <ListItemText primary={post.label} />
+                    <Checkbox
+                      className={option.isOptGroup ? classes.group : ""}
+                    />
+                    <ListItemText primary={option.label} />
                   </MenuItem>
-                  {post.options.map(option => (
-                    <MenuItem
-                      key={option.value}
-                      value={option.value}
-                      disabled={option.isDisabled}
-                      className={classes.item}
-                    >
-                      <Checkbox />
-                      <ListItemText primary={option.label} />
-                    </MenuItem>
-                  ))}
-                </div>
-              );
+                );
+              });
             })}
           </Select>
         </FormControl>

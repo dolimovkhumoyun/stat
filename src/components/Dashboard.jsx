@@ -122,7 +122,7 @@ const useStyles = makeStyles(theme => ({
 
 function Dashboard(props) {
   const classes = useStyles();
-  const [open, setOpen] = React.useState(true);
+  const [open, setOpen] = React.useState(false);
   const handleDrawerOpen = () => {
     setOpen(true);
   };
@@ -134,6 +134,11 @@ function Dashboard(props) {
   useEffect(() => {
     props.getRegions();
   }, []);
+
+  const onSubmit = formData => event => {
+    event.preventDefault();
+    console.log(formData);
+  };
 
   return (
     <div className={classes.root}>
@@ -196,7 +201,7 @@ function Dashboard(props) {
             <Grid item xs={12}>
               {/* *** Search DIV*** */}
               <Paper className={classes.paper}>
-                <SearchBar />
+                <SearchBar onSubmit={formData => onSubmit(formData)} />
               </Paper>
             </Grid>
             {/* *** Regions DIV */}

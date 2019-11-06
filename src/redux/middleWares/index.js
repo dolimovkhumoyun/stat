@@ -2,8 +2,8 @@ import io from "socket.io-client";
 import { GET_REGIONS, GET_POSTS } from "../constants";
 import { setRegions, setPosts } from "../actions";
 
-// export const socket = io("101.4.0.254:8878/api");
-export const socket = io("192.168.1.8:8878/api");
+export const socket = io("101.4.0.254:8878/api");
+// export const socket = io("192.168.1.8:8878/api");
 
 export function regionsMiddleware({ dispatch }) {
   return function(next) {

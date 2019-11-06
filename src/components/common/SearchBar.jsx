@@ -24,6 +24,8 @@ import { getRegions, getPosts } from "../../redux/actions";
 import useLoginForm from "../../hooks/CustomHooks";
 import _ from "lodash";
 import moment from "moment";
+import { setDate } from "date-fns";
+import { isIp } from "is-ip";
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -77,29 +79,93 @@ const SearchBar = props => {
   const endOfDay = moment()
     .endOf("day")
     .format(formatTime);
-
-  // const submit
-
-  const {
-    inputs,
-    isSelectAllClicked,
-    handleInputChange,
-    handleSubmit
-  } = useLoginForm(props);
-  const [startDate, setStartDate] = useState(startOfDay);
-  const [endDate, setEndDate] = useState(endOfDay);
-  const [posts, setPosts] = useState([]);
-
+  // ComponenentDidMount
   useEffect(() => {
     props.getRegions();
   }, []);
-
+  // ComponentWillRecieveProps
   useEffect(() => {
     if (props.regions.length !== 0) {
       const regionIds = _.map(props.regions, "value");
       props.getPosts(regionIds);
     }
   }, [props.regions]);
+
+  const [inputs, setInputs] = useState({ carNumber: "", type: "" });
+  const [startDate, setStartDate] = useState(startOfDay);
+  const [endDate, setEndDate] = useState(endOfDay);
+  const [regions, setRegions] = useState([]);
+  const [isSelectAllClicked, setSelectAll] = useState(false);
+  const [posts, setPosts] = useState([]);
+
+  const handleInputChange = e => {
+    let value = e.target.value;
+    if (e.target.name === "carNumber") {
+      value = value.toUpperCase();
+    }
+    setInputs(inputs => ({
+      ...inputs,
+      [e.target.name]: value
+    }));
+  };
+
+  const handleRegionChange = e => {
+    const region = e.target.value;
+    var selectedRegionLabels = [];
+    var selectedPosts = [];
+    var selectedPostIds = [];
+    const allRegionIds = _.map(
+      _.filter(props.regions, ["isoffline", false]),
+      "value"
+    );
+
+    region.map(r => {
+      props.regions.map(regs => {
+        if (regs.value === r) {
+          selectedRegionLabels.push(regs.label);
+          return false;
+        }
+      });
+    });
+
+    selectedRegionLabels.map(s => {
+      props.posts.map(p => {
+        if (p.label == s) {
+          selectedPosts.push(p.options);
+          return false;
+        }
+      });
+    });
+
+    selectedPosts.map(s => {
+      s.map(o => {
+        if (!o.isDisabled) selectedPostIds.push(o.value);
+        return false;
+      });
+    });
+
+    var allPostIds = props.posts.map(post =>
+      _.map(_.filter(post.options, ["isDisabled", false]), "value")
+    );
+    allPostIds = _.flatten(allPostIds);
+
+    if (_.indexOf(e.target.value, "-1") !== -1 && !isSelectAllClicked) {
+      setRegions(allRegionIds);
+      setPosts(allPostIds);
+      setSelectAll(true);
+    } else if (_.indexOf(e.target.value, "-1") !== -1 && isSelectAllClicked) {
+      setRegions([]);
+      setPosts([]);
+      setSelectAll(false);
+    } else {
+      setRegions(e.target.value);
+      setPosts(selectedPostIds);
+    }
+  };
+
+  const handlePostChange = e => {
+    setPosts(e.target.value);
+  };
 
   const renderRegionsValue = values => {
     if (props.regions.length !== 0) {
@@ -122,31 +188,42 @@ const SearchBar = props => {
     }
     return _.join(d, ", ");
   };
-  const onChange = e => {
-    console.log(e);
-  };
 
-  const postSelect = posts => {
-    console.log(posts);
-  };
+  const renderPostsValue = values => {
+    if (props.posts.length !== 0) {
+      var d = [];
+      let i = 0;
 
-  const onMultiSelectClick = ({ target: input }) => {
-    let tmp = posts;
-    var index = tmp.indexOf(input.value);
-    if (index > -1) {
-      console.log("found");
-      tmp.splice(index, 1);
+      props.posts.map(post =>
+        post.options.map(option => {
+          values.map(id => {
+            if (option.value === id && d[d.length - 1] !== "...") {
+              if (d.length > 2) {
+                d.push("...");
+                return _.join(d, ", ");
+              }
 
-      setPosts(tmp);
-    } else {
-      console.log("not found");
-      setPosts(posts => [...posts, input.value]);
+              d.push(option.label);
+            }
+          });
+        })
+      );
     }
+    return _.join(d, ", ");
   };
+
   const onSubmit = e => {
-    console.log(e);
+    e.preventDefault();
+    const formData = {
+      inputs,
+      startDate,
+      endDate,
+      regions,
+      posts
+    };
+    console.log(formData);
   };
-  console.log(posts);
+
   return (
     <React.Fragment>
       <form className={classes.root} autoComplete="off" onSubmit={onSubmit}>
@@ -156,19 +233,15 @@ const SearchBar = props => {
           </InputLabel>
           <Select
             required
-            inputProps={{
-              name: "type",
-              id: "type-required"
-            }}
             displayEmpty
             className={classes.selectEmpty}
             name="type"
-            value={inputs.type || 10}
+            value={inputs.type || "-1"}
             onChange={handleInputChange}
           >
-            <MenuItem value={10}>All</MenuItem>
-            <MenuItem value={20}>Wanted</MenuItem>
-            <MenuItem value={30}>Not Wanted</MenuItem>
+            <MenuItem value={"-1"}>All</MenuItem>
+            <MenuItem value={"1"}>Wanted</MenuItem>
+            <MenuItem value={"0"}>Not Wanted</MenuItem>
           </Select>
         </FormControl>
         <FormControl className={classes.formControl}>
@@ -204,6 +277,7 @@ const SearchBar = props => {
         </FormControl>
         <FormControl className={classes.formControl}>
           <TextField
+            required
             id="standard-uncontrolled"
             label="Car Number"
             defaultValue=""
@@ -215,22 +289,25 @@ const SearchBar = props => {
         </FormControl>
 
         <FormControl className={classes.formControlSelect}>
-          <InputLabel htmlFor="select-multiple-checkbox">Regions</InputLabel>
+          <InputLabel htmlFor="select-multiple-checkbox" required>
+            Regions
+          </InputLabel>
           <Select
+            required
             multiple
             displayEmpty={true}
             input={<Input id="select-multiple-checkbox" />}
             renderValue={selected => renderRegionsValue(selected)}
             MenuProps={MenuProps}
             name="regions"
-            value={inputs.regions || []}
-            onChange={handleInputChange}
-            // MenuProps={MenuProps}
+            value={regions || []}
+            onChange={handleRegionChange}
           >
             <MenuItem
               key="-1"
               checked={isSelectAllClicked}
               value="-1"
+              onChange={handleRegionChange}
               // onClick={() => setSelectedAll(true)}
             >
               <ListItemText
@@ -243,7 +320,7 @@ const SearchBar = props => {
                 value={region.value}
                 disabled={region.isoffline}
               >
-                <Checkbox checked={inputs.regions.indexOf(region.value) > -1} />
+                <Checkbox checked={regions.indexOf(region.value) > -1} />
                 <ListItemText primary={region.label} />
               </MenuItem>
             ))}
@@ -252,12 +329,14 @@ const SearchBar = props => {
         <FormControl className={classes.formControlSelect}>
           <InputLabel htmlFor="select-multiple-checkbox">Posts</InputLabel>
           <Select
+            required
             multiple
             displayEmpty={true}
             input={<Input id="select-multiple-checkbox" />}
             name="posts"
             value={posts || []}
-            // onChange={onChange}
+            onChange={handlePostChange}
+            renderValue={selected => renderPostsValue(selected)}
           >
             {props.posts.map(post => {
               if (post.options[0].isOptGroup === undefined) {
@@ -277,9 +356,10 @@ const SearchBar = props => {
                         ? classes.disabledItem
                         : classes.normalItem
                     }
-                    disabled={option.isOptGroup}
+                    disabled={option.isDisabled || option.isOptGroup}
                   >
                     <Checkbox
+                      checked={posts.indexOf(option.value) > -1}
                       className={option.isOptGroup ? classes.group : ""}
                     />
                     <ListItemText primary={option.label} />
@@ -290,7 +370,12 @@ const SearchBar = props => {
           </Select>
         </FormControl>
         <FormControl className={classes.formControlSelect}>
-          <Fab color="primary" aria-label="add" className={classes.fab}>
+          <Fab
+            type="submit"
+            color="primary"
+            aria-label="add"
+            className={classes.fab}
+          >
             <SearchIcon />
           </Fab>
         </FormControl>

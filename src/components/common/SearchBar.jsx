@@ -15,17 +15,14 @@ import { MuiPickersUtilsProvider, DateTimePicker } from "material-ui-pickers";
 
 // pick utils
 import MomentUtils from "@date-io/moment";
-import DateFnsUtils from "@date-io/date-fns";
-// import LuxonUtils from "@date-io/luxon";
 
 import React, { useEffect, useState } from "react";
 import { connect } from "react-redux";
-import { getRegions, getPosts } from "../../redux/actions";
+import { getRegions, getPosts, setForm } from "../../redux/actions";
 import useLoginForm from "../../hooks/CustomHooks";
+
 import _ from "lodash";
 import moment from "moment";
-import { setDate } from "date-fns";
-import { isIp } from "is-ip";
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -79,10 +76,12 @@ const SearchBar = props => {
   const endOfDay = moment()
     .endOf("day")
     .format(formatTime);
+
   // ComponenentDidMount
   useEffect(() => {
     props.getRegions();
   }, []);
+
   // ComponentWillRecieveProps
   useEffect(() => {
     if (props.regions.length !== 0) {
@@ -91,7 +90,7 @@ const SearchBar = props => {
     }
   }, [props.regions]);
 
-  const [inputs, setInputs] = useState({ carNumber: "", type: "" });
+  const [inputs, setInputs] = useState({ carNumber: "", type: "-1" });
   const [startDate, setStartDate] = useState(startOfDay);
   const [endDate, setEndDate] = useState(endOfDay);
   const [regions, setRegions] = useState([]);
@@ -214,14 +213,16 @@ const SearchBar = props => {
 
   const onSubmit = e => {
     e.preventDefault();
+    console.log(props.posts);
     const formData = {
-      inputs,
+      carNumber: inputs.carNumber,
+      type: inputs.type,
+      direction: regions,
       startDate,
       endDate,
-      regions,
       posts
     };
-    console.log(formData);
+    props.setForm(formData);
   };
 
   return (
@@ -236,7 +237,7 @@ const SearchBar = props => {
             displayEmpty
             className={classes.selectEmpty}
             name="type"
-            value={inputs.type || "-1"}
+            value={inputs.type}
             onChange={handleInputChange}
           >
             <MenuItem value={"-1"}>All</MenuItem>
@@ -277,7 +278,6 @@ const SearchBar = props => {
         </FormControl>
         <FormControl className={classes.formControl}>
           <TextField
-            required
             id="standard-uncontrolled"
             label="Car Number"
             defaultValue=""
@@ -293,7 +293,6 @@ const SearchBar = props => {
             Regions
           </InputLabel>
           <Select
-            required
             multiple
             displayEmpty={true}
             input={<Input id="select-multiple-checkbox" />}
@@ -308,7 +307,6 @@ const SearchBar = props => {
               checked={isSelectAllClicked}
               value="-1"
               onChange={handleRegionChange}
-              // onClick={() => setSelectedAll(true)}
             >
               <ListItemText
                 primary={isSelectAllClicked ? "Unselect all" : "Select All"}
@@ -390,7 +388,8 @@ const mapStateToProps = ({ regions, posts }) => ({
 
 const mapDispatchToProps = dispatch => ({
   getRegions: () => dispatch(getRegions()),
-  getPosts: data => dispatch(getPosts(data))
+  getPosts: data => dispatch(getPosts(data)),
+  setForm: data => dispatch(setForm(data))
 });
 
 export default connect(

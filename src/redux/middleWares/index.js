@@ -1,9 +1,9 @@
 import io from "socket.io-client";
-import { GET_REGIONS, GET_POSTS } from "../constants";
+import { GET_REGIONS, GET_POSTS, SET_FORM } from "../constants";
 import { setRegions, setPosts } from "../actions";
 
-export const socket = io("101.4.0.254:8878/api");
-// export const socket = io("192.168.1.8:8878/api");
+// export const socket = io("101.4.0.254:8878/api");
+export const socket = io("192.168.1.8:8878/api");
 
 export function regionsMiddleware({ dispatch }) {
   return function(next) {
@@ -34,6 +34,25 @@ export function postsMiddleware({ dispatch }) {
           dispatch(setPosts(data.data)); // passing list of posts to redux store
         });
         socket.once("err", data => {
+          console.log(data);
+        });
+      }
+      return next(action);
+    };
+  };
+}
+
+export function searchResultMIddleware({ dispatch }) {
+  return function(next) {
+    return function(action) {
+      if (action.type === SET_FORM) {
+        const token = localStorage.getItem("token");
+        const formData = action.payload;
+        socket.emit("search", { ...formData, token });
+        socket.once("search", data => {
+          console.log(data);
+        });
+        socket.on("err", data => {
           console.log(data);
         });
       }

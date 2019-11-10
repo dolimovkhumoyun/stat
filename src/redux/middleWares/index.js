@@ -1,9 +1,15 @@
 import io from "socket.io-client";
 import { GET_REGIONS, GET_POSTS, SET_FORM } from "../constants";
-import { setRegions, setPosts } from "../actions";
+import {
+  setRegions,
+  setPosts,
+  setResult,
+  setResultCount,
+  resetResults
+} from "../actions";
 
-// export const socket = io("101.4.0.254:8878/api");
-export const socket = io("192.168.1.8:8878/api");
+export const socket = io("101.4.0.254:8878/api");
+// export const socket = io("192.168.1.8:8878/api");
 
 export function regionsMiddleware({ dispatch }) {
   return function(next) {
@@ -42,15 +48,19 @@ export function postsMiddleware({ dispatch }) {
   };
 }
 
-export function searchResultMIddleware({ dispatch }) {
+export function searchResultMIddleware({ dispatch, getState }) {
   return function(next) {
     return function(action) {
       if (action.type === SET_FORM) {
         const token = localStorage.getItem("token");
         const formData = action.payload;
+        dispatch(resetResults());
         socket.emit("search", { ...formData, token });
-        socket.once("search", data => {
-          console.log(data);
+        socket.on("search", data => {
+          dispatch(setResult(data));
+        });
+        socket.on("count", data => {
+          dispatch(setResultCount(data));
         });
         socket.on("err", data => {
           console.log(data);

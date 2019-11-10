@@ -5,7 +5,9 @@ import {
   SET_POSTS,
   SET_FORM,
   SET_RESULT,
-  GET_RESULT
+  GET_RESULT,
+  SET_RESULT_COUNT,
+  RESET_RESULTS
 } from "../constants";
 
 const getRegions = () => ({
@@ -42,6 +44,15 @@ const setResult = data => ({
   payload: data
 });
 
+const setResultCount = data => ({
+  type: SET_RESULT_COUNT,
+  payload: data
+});
+
+const resetResults = () => ({
+  type: RESET_RESULTS
+});
+
 export {
   getRegions,
   setRegions,
@@ -49,5 +60,7 @@ export {
   setPosts,
   setForm,
   getResult,
-  setResult
+  setResult,
+  setResultCount,
+  resetResults
 };

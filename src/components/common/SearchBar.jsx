@@ -23,6 +23,7 @@ import useLoginForm from "../../hooks/CustomHooks";
 
 import _ from "lodash";
 import moment from "moment";
+import { isIP } from "net";
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -90,7 +91,7 @@ const SearchBar = props => {
     }
   }, [props.regions]);
 
-  const [inputs, setInputs] = useState({ carNumber: "", type: "-1" });
+  const [inputs, setInputs] = useState({ carNumber: "", type: "all" });
   const [startDate, setStartDate] = useState(startOfDay);
   const [endDate, setEndDate] = useState(endOfDay);
   const [regions, setRegions] = useState([]);
@@ -163,9 +164,31 @@ const SearchBar = props => {
   };
 
   const handlePostChange = e => {
+    let selectedRegions = [];
+    let selectedRegionIds = [];
+    let posts = e.target.value;
+    posts.map(post => {
+      props.posts.map(p => {
+        p.options.map(o => {
+          if (post === o.value) selectedRegions.push(p.label);
+        });
+      });
+    });
+
+    selectedRegions = _.sortedUniq(selectedRegions);
+    selectedRegions.map(s => {
+      props.regions.map(r => {
+        if (s === r.label) {
+          selectedRegionIds.push(r.value);
+        }
+      });
+    });
+    selectedRegionIds = _.union(regions, selectedRegionIds);
+    setRegions(selectedRegionIds);
     setPosts(e.target.value);
   };
 
+  // renders the values of selected options ex: Andijon,Toshkent,Samarqand...
   const renderRegionsValue = values => {
     if (props.regions.length !== 0) {
       var d = [];
@@ -188,6 +211,7 @@ const SearchBar = props => {
     return _.join(d, ", ");
   };
 
+  // renders the values of selected options ex: Andijon,Toshkent,Samarqand...
   const renderPostsValue = values => {
     if (props.posts.length !== 0) {
       var d = [];
@@ -211,16 +235,30 @@ const SearchBar = props => {
     return _.join(d, ", ");
   };
 
+  const isIP = value => {
+    const isIp = /^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$/.test(
+      value
+    );
+    return isIp;
+  };
+
   const onSubmit = e => {
     e.preventDefault();
-    console.log(props.posts);
+    const spr = regions.map(Number);
+    let tmpPosts = [];
+    posts.map(p => {
+      if (isIP(p)) {
+        tmpPosts.push(p);
+      }
+    });
     const formData = {
       carNumber: inputs.carNumber,
       type: inputs.type,
       direction: regions,
+      posts: tmpPosts,
       startDate,
       endDate,
-      posts
+      spr
     };
     props.setForm(formData);
   };
@@ -240,7 +278,7 @@ const SearchBar = props => {
             value={inputs.type}
             onChange={handleInputChange}
           >
-            <MenuItem value={"-1"}>All</MenuItem>
+            <MenuItem value={"all"}>All</MenuItem>
             <MenuItem value={"1"}>Wanted</MenuItem>
             <MenuItem value={"0"}>Not Wanted</MenuItem>
           </Select>

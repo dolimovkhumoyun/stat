@@ -21,17 +21,19 @@ import { mainListItems, secondaryListItems } from "./common/List";
 // import Deposits from "./Deposits";
 // import Orders from "./Orders";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { connect } from "react-redux";
 import { getRegions } from "../redux/actions";
 import SearchBar from "./common/SearchBar";
+import SerachList from "./common/SearchList";
+import CustomTable from "./common/CustomTable";
 
 function Copyright() {
   return (
     <Typography variant="body2" color="textSecondary" align="center">
       {"Copyright © "}
-      <Link color="inherit" href="https://material-ui.com/">
-        Your Website
+      <Link color="inherit" href="http://fizmasoft.uz/">
+        FizmaSoft
       </Link>{" "}
       {new Date().getFullYear()}
       {"."}
@@ -116,7 +118,7 @@ const useStyles = makeStyles(theme => ({
     flexDirection: "column"
   },
   fixedHeight: {
-    height: 240
+    height: "100%"
   }
 }));
 
@@ -131,9 +133,16 @@ function Dashboard(props) {
   };
   const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
 
+  const [selectedListIndex, setSelectedListIndex] = useState();
+
   useEffect(() => {
     props.getRegions();
   }, []);
+
+  const onListSelect = (event, index) => {
+    // console.log(event.target);
+    setSelectedListIndex(index);
+  };
 
   const onSubmit = formData => event => {
     event.preventDefault();
@@ -206,11 +215,18 @@ function Dashboard(props) {
             </Grid>
             {/* *** Regions DIV */}
             <Grid item xs={12} md={4} lg={3}>
-              <Paper className={fixedHeightPaper}>{/* <Deposits /> */}</Paper>
+              <Paper className={fixedHeightPaper}>
+                <SerachList
+                  onListSelect={onListSelect}
+                  selectedListIndex={selectedListIndex}
+                />
+              </Paper>
             </Grid>
             {/* *** Table DIV *** */}
             <Grid item xs={12} md={8} lg={9}>
-              <Paper className={fixedHeightPaper}>{/* <Chart /> */}</Paper>
+              <Paper className={fixedHeightPaper}>
+                <CustomTable selectedListIndex={selectedListIndex} />
+              </Paper>
             </Grid>
           </Grid>
         </Container>

@@ -23,10 +23,11 @@ import { mainListItems, secondaryListItems } from "./common/List";
 
 import React, { useEffect, useState } from "react";
 import { connect } from "react-redux";
-import { getRegions } from "../redux/actions";
+import { getRegions, setResult, setResultCount } from "../redux/actions";
 import SearchBar from "./common/SearchBar";
 import SerachList from "./common/SearchList";
 import CustomTable from "./common/CustomTable";
+import { socket } from "../redux/middleWares";
 
 function Copyright() {
   return (
@@ -118,7 +119,19 @@ const useStyles = makeStyles(theme => ({
     flexDirection: "column"
   },
   fixedHeight: {
-    height: "100%"
+    height: 640
+  },
+  "@global": {
+    "*::-webkit-scrollbar": {
+      width: "0.4em"
+    },
+    "*::-webkit-scrollbar-track": {
+      "-webkit-box-shadow": "inset 0 0 6px rgba(0,0,0,0.00)"
+    },
+    "*::-webkit-scrollbar-thumb": {
+      backgroundColor: "rgba(0,0,0,.1)",
+      outline: "1px solid slategrey"
+    }
   }
 }));
 
@@ -137,6 +150,12 @@ function Dashboard(props) {
 
   useEffect(() => {
     props.getRegions();
+    socket.on("search", data => {
+      props.setResult(data);
+    });
+    socket.on("count", data => {
+      props.setResultCount(data);
+    });
   }, []);
 
   const onListSelect = (event, index) => {
@@ -205,7 +224,7 @@ function Dashboard(props) {
       </Drawer>
       <main className={classes.content}>
         <div className={classes.appBarSpacer} />
-        <Container maxWidth="lg" className={classes.container}>
+        <Container maxWidth="xl" className={classes.container}>
           <Grid container spacing={3}>
             <Grid item xs={12}>
               {/* *** Search DIV*** */}
@@ -214,7 +233,7 @@ function Dashboard(props) {
               </Paper>
             </Grid>
             {/* *** Regions DIV */}
-            <Grid item xs={12} md={4} lg={3}>
+            <Grid item xs={12} md={3} lg={2}>
               <Paper className={fixedHeightPaper}>
                 <SerachList
                   onListSelect={onListSelect}
@@ -223,7 +242,7 @@ function Dashboard(props) {
               </Paper>
             </Grid>
             {/* *** Table DIV *** */}
-            <Grid item xs={12} md={8} lg={9}>
+            <Grid item xs={12} md={9} lg={10}>
               <Paper className={fixedHeightPaper}>
                 <CustomTable selectedListIndex={selectedListIndex} />
               </Paper>
@@ -241,7 +260,9 @@ const mapStateToProps = ({ regions }) => ({
 });
 
 const mapDispatchToProps = dispatch => ({
-  getRegions: () => dispatch(getRegions())
+  getRegions: () => dispatch(getRegions()),
+  setResult: data => dispatch(setResult(data)),
+  setResultCount: data => dispatch(setResultCount(data))
 });
 
 export default connect(

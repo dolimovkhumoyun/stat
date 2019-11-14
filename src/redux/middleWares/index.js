@@ -56,12 +56,12 @@ export function searchResultMIddleware({ dispatch, getState }) {
         const formData = action.payload;
         dispatch(resetResults());
         socket.emit("search", { ...formData, token });
-        socket.on("search", data => {
-          dispatch(setResult(data));
-        });
-        socket.on("count", data => {
-          dispatch(setResultCount(data));
-        });
+        // socket.on("search", data => {
+        //   dispatch(setResult(data));
+        // });
+        // socket.on("count", data => {
+        //   dispatch(setResultCount(data));
+        // });
         socket.on("err", data => {
           console.log(data);
         });

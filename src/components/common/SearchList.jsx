@@ -15,6 +15,9 @@ import React, { useEffect, useState } from "react";
 import { connect } from "react-redux";
 import _ from "lodash";
 
+import Loader from "react-loader-spinner";
+import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
+
 const useStyles = makeStyles(theme => ({
   root: {
     width: "100%",
@@ -45,17 +48,31 @@ const SerachList = props => {
   const countResults = id => {
     const { searchResultCount } = props.results;
 
+    let flag = _.get(
+      _.find(props.results.searchResultCount, ["id", id]),
+      "count"
+    );
+
     if (
       searchResultCount !== undefined &&
-      _.findIndex(searchResultCount, ["id", id] !== -1)
+      _.findIndex(searchResultCount, ["id", id]) !== -1
     ) {
       let element = "";
       element = searchResultCount.map(m => {
         return m.id === id ? m.count : "";
       });
-      return element;
+
+      return flag === -1 ? " " : element;
     } else {
-      return <CircularProgress />;
+      return (
+        <Loader
+          type="ThreeDots"
+          color="#00BFFF"
+          height={20}
+          width={30}
+          timeout={3000} //3 secs
+        />
+      );
     }
   };
 
@@ -68,6 +85,12 @@ const SerachList = props => {
               button
               selected={props.selectedListIndex === s.value}
               onClick={event => props.onListSelect(event, s.value)}
+              disabled={
+                _.get(
+                  _.find(props.results.searchResultCount, ["id", s.value]),
+                  "count"
+                ) === -1
+              }
             >
               <ListItemText primary={s.label} />
               {countResults(s.value)}

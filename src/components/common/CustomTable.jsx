@@ -2,12 +2,15 @@ import React from "react";
 import { connect } from "react-redux";
 import MUIDataTable from "mui-datatables";
 import _ from "lodash";
+
+import { createMuiTheme, MuiThemeProvider } from "@material-ui/core/styles";
+
 const columns = [
   {
     name: "car_number",
     label: "Car Number",
     options: {
-      filter: true,
+      filter: false,
       sort: true
     }
   },
@@ -15,32 +18,48 @@ const columns = [
     name: "the_date",
     label: "Date",
     options: {
-      filter: true,
-      sort: false
+      filter: false,
+      sort: true
     }
   },
   {
     name: "camera",
     label: "Camera",
     options: {
-      filter: true,
-      sort: false
+      filter: false,
+      sort: true
     }
   },
   {
     name: "ip",
     label: "IP",
     options: {
-      filter: true,
-      sort: false
+      filter: false,
+      sort: true
     }
   }
 ];
 const options = {
-  filterType: "checkbox"
+  pagination: false,
+  print: false,
+  viewColumns: false,
+  filter: false,
+  selectableRows: "none",
+  responsive: "scroll"
 };
 
 const CustomTable = props => {
+  const getMuiTheme = () =>
+    createMuiTheme({
+      overrides: {
+        MUIDataTableBodyCell: {
+          root: {
+            backgroundColor: "#FF0000"
+          }
+        }
+      }
+    });
+
   const { searchResult } = props.results;
   if (
     searchResult !== undefined &&
@@ -50,12 +69,14 @@ const CustomTable = props => {
       searchResult[_.findIndex(searchResult, ["id", props.selectedListIndex])]
         .data;
     return (
+      // <MuiThemeProvider theme={getMuiTheme()}>
       <MUIDataTable
-        title={"Employee List"}
+        title={"Result"}
         data={data}
         columns={columns}
         options={options}
       />
+      // </MuiThemeProvider>
     );
   } else {
     return "";

@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import _ from "lodash";
+import { useState } from "react";
 
 const useLoginForm = (props, callback) => {
   const [inputs, setInputs] = useState({ regions: [] });

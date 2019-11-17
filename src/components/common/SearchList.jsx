@@ -1,15 +1,8 @@
 import { makeStyles } from "@material-ui/core/styles";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
-import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
 import Divider from "@material-ui/core/Divider";
-import InboxIcon from "@material-ui/icons/Inbox";
-import DraftsIcon from "@material-ui/icons/Drafts";
-import DirectionsCarIcon from "@material-ui/icons/DirectionsCar";
-import Badge from "@material-ui/core/Badge";
-import HourglassFullIcon from "@material-ui/icons/HourglassFull";
-import CircularProgress from "@material-ui/core/CircularProgress";
 
 import React, { useEffect, useState } from "react";
 import { connect } from "react-redux";
@@ -26,7 +19,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const SerachList = props => {
+const SearchList = props => {
   const classes = useStyles();
   const [searchedRegions, setRegions] = useState([]);
 
@@ -36,10 +29,10 @@ const SerachList = props => {
       let tmpRegions = [];
       formData.direction.map(d => {
         props.regions.map(r => {
-          if (d === r.value) {
-            tmpRegions.push(r);
-          }
+          if (d === r.value) tmpRegions.push(r);
+          return false;
         });
+        return false;
       });
       setRegions(tmpRegions);
     }
@@ -89,7 +82,8 @@ const SerachList = props => {
                 _.get(
                   _.find(props.results.searchResultCount, ["id", s.value]),
                   "count"
-                ) === -1
+                ) === -1 ||
+                _.find(props.results.searchResultCount, ["id", s.value]) === -1
               }
             >
               <ListItemText primary={s.label} />
@@ -111,7 +105,4 @@ const mapStateToProps = ({ regions, posts, results }) => ({
 
 const mapDispatchToProps = dispatch => ({});
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(SerachList);
+export default connect(mapStateToProps, mapDispatchToProps)(SearchList);

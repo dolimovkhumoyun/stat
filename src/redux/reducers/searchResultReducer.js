@@ -24,10 +24,10 @@ const searchResultReducer = (state = [], action) => {
   }
 
   if (action.type === SET_RESULT) {
-    let tmp = state.searchResult || [];
+    let tmp = state.searchResult;
     let index = _.findIndex(tmp, ["id", action.payload.id]);
     if (index !== -1) {
-      tmp[index] = action.payload;
+      tmp[index].data.push(...action.payload.data);
     } else {
       tmp.push(action.payload);
     }

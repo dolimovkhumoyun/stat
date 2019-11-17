@@ -2,18 +2,14 @@ import Avatar from "@material-ui/core/Avatar";
 import Button from "@material-ui/core/Button";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import TextField from "@material-ui/core/TextField";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import Checkbox from "@material-ui/core/Checkbox";
 import Link from "@material-ui/core/Link";
-import Grid from "@material-ui/core/Grid";
 import Box from "@material-ui/core/Box";
-// import LockOutlinedIcon from "@material-ui/icons/LockOutlined";
 import Typography from "@material-ui/core/Typography";
 import { makeStyles } from "@material-ui/core/styles";
 import Container from "@material-ui/core/Container";
 //  ******************************************************************************************  //
 
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import useLoginForm from "../hooks/CustomHooks";
 import { socket } from "../redux/middleWares";
 import { toast, ToastContainer } from "react-toastify";
@@ -59,6 +55,19 @@ const useStyles = makeStyles(theme => ({
 export default function Login(props) {
   const classes = useStyles();
 
+  useEffect(() => {
+    if (localStorage.getItem("token")) {
+      props.history.push("/dashboard");
+    }
+    if (
+      props.history.location.state !== undefined &&
+      props.history.location.state.err === 401
+    ) {
+      localStorage.removeItem("token");
+      toast.error("Сизнинг сессиянгиз тугади. Илтимос, кайтадан киринг!");
+    }
+  }, []);
+
   const auth = props => {
     const { username, password } = inputs;
     socket.emit("login", { username, password });
@@ -82,9 +91,9 @@ export default function Login(props) {
       <ToastContainer position="top-center" />
       <CssBaseline />
       <div className={classes.paper}>
-        <Avatar className={classes.avatar}></Avatar>
+        {/* <Avatar className={classes.avatar} src={"/favicon.ico"}></Avatar> */}
         <Typography component="h1" variant="h5">
-          Sign in
+          Тизимга кириш
         </Typography>
         <form className={classes.form} noValidate onSubmit={handleSubmit}>
           <TextField
@@ -113,10 +122,7 @@ export default function Login(props) {
             onChange={handleInputChange}
             value={inputs.password || ""}
           />
-          <FormControlLabel
-            control={<Checkbox value="remember" color="primary" />}
-            label="Remember me"
-          />
+
           <Button
             type="submit"
             fullWidth
@@ -124,7 +130,7 @@ export default function Login(props) {
             color="primary"
             className={classes.submit}
           >
-            Sign In
+            Кириш
           </Button>
         </form>
       </div>

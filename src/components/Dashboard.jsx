@@ -8,15 +8,13 @@ import List from "@material-ui/core/List";
 import Typography from "@material-ui/core/Typography";
 import Divider from "@material-ui/core/Divider";
 import IconButton from "@material-ui/core/IconButton";
-import Badge from "@material-ui/core/Badge";
 import Container from "@material-ui/core/Container";
 import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
-import Link from "@material-ui/core/Link";
 import MenuIcon from "@material-ui/icons/Menu";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
-import NotificationsIcon from "@material-ui/icons/Notifications";
-import { mainListItems, secondaryListItems } from "./common/List";
+import { mainListItems } from "./common/List";
+import ExitToAppIcon from "@material-ui/icons/ExitToApp";
 // import Chart from "./Chart";
 // import Deposits from "./Deposits";
 // import Orders from "./Orders";
@@ -25,22 +23,27 @@ import React, { useEffect, useState } from "react";
 import { connect } from "react-redux";
 import { getRegions, setResult, setResultCount } from "../redux/actions";
 import SearchBar from "./common/SearchBar";
-import SerachList from "./common/SearchList";
+import SearchList from "./common/SearchList";
 import CustomTable from "./common/CustomTable";
 import { socket } from "../redux/middleWares";
+import pdfMake from "pdfmake/build/pdfmake";
+import pdfFonts from "pdfmake/build/vfs_fonts";
 
-function Copyright() {
-  return (
-    <Typography variant="body2" color="textSecondary" align="center">
-      {"Copyright © "}
-      <Link color="inherit" href="http://fizmasoft.uz/">
-        FizmaSoft
-      </Link>{" "}
-      {new Date().getFullYear()}
-      {"."}
-    </Typography>
-  );
-}
+import _ from "lodash";
+import Lightbox from "react-image-lightbox";
+import "react-image-lightbox/style.css";
+// function Copyright() {
+//   return (
+//     <Typography variant="body2" color="textSecondary" align="center">
+//       {"Copyright © "}
+//       <Link color="inherit" href="http://fizmasoft.uz/">
+//         FizmaSoft
+//       </Link>{" "}
+//       {new Date().getFullYear()}
+//       {"."}
+//     </Typography>
+//   );
+// }
 
 const drawerWidth = 240;
 
@@ -113,13 +116,13 @@ const useStyles = makeStyles(theme => ({
     paddingBottom: theme.spacing(4)
   },
   paper: {
-    padding: theme.spacing(2),
+    padding: theme.spacing(1),
     display: "flex",
     overflow: "auto",
     flexDirection: "column"
   },
   fixedHeight: {
-    height: 640
+    height: "65vh"
   },
   "@global": {
     "*::-webkit-scrollbar": {
@@ -132,6 +135,15 @@ const useStyles = makeStyles(theme => ({
       backgroundColor: "rgba(0,0,0,.1)",
       outline: "1px solid slategrey"
     }
+  },
+  margin: {
+    margin: theme.spacing(1),
+    width: "200px",
+    marginTop: "25px",
+    marginLeft: "40%"
+  },
+  extendedIcon: {
+    marginRight: theme.spacing(1)
   }
 }));
 
@@ -147,20 +159,167 @@ function Dashboard(props) {
   const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
 
   const [selectedListIndex, setSelectedListIndex] = useState();
+  const [image, setImage] = useState(null);
+  const [isLightBoxVisible, setLightBoxVisibilty] = useState(false);
+  const [isMoreLoading, setMoreLoading] = useState(false);
 
   useEffect(() => {
     props.getRegions();
     socket.on("search", data => {
       props.setResult(data);
+      setMoreLoading(false);
     });
     socket.on("count", data => {
       props.setResultCount(data);
+    });
+    socket.on("image", data => {
+      let imgBase64 = `data:image/png;base64,${data.data[0].car_photo}`;
+      setImage(imgBase64);
+      setLightBoxVisibilty(true);
+    });
+    socket.once("err", data => {
+      if (data.status === 401) {
+        props.history.push({
+          pathname: "/",
+          state: { err: 401 }
+        });
+      }
     });
   }, []);
 
   const onListSelect = (event, index) => {
     // console.log(event.target);
     setSelectedListIndex(index);
+  };
+
+  const onMoreClick = (e, regionId) => {
+    let clickedRegion = _.find(props.results.searchResult, ["id", regionId]);
+    const {
+      posts,
+      carNumber,
+      type,
+      startDate,
+      endDate,
+      spr
+    } = props.results.formData;
+    let offset = clickedRegion.data.length;
+    const data = {
+      direction: [regionId],
+      posts,
+      carNumber,
+      type,
+      startDate,
+      endDate,
+      spr,
+      offset: offset,
+      token: localStorage.getItem("token")
+    };
+    setMoreLoading(true);
+    socket.emit("search", data);
+    let tableBody = document.getElementsByClassName(
+      "table_" + selectedListIndex
+    );
+
+    tableBody[0].scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+      inline: "nearest"
+    });
+  };
+
+  const onDoubleClick = row => {
+    let data = {
+      event_id: row.event_id,
+      ip: row.ip,
+      the_date: row.the_date,
+      token: localStorage.getItem("token")
+    };
+    socket.emit("loadImage", data);
+  };
+
+  const onPrintClick = id => {
+    pdfMake.vfs = pdfFonts.pdfMake.vfs;
+    let rgn = _.find(props.regions, ["value", id]); // finding region
+    const { startDate, endDate } = props.results.formData;
+    let header = `${rgn.label}  ${startDate} дан - ${endDate} гача`;
+    var docDefinition = {
+      content: [
+        { text: header, style: "subheader" },
+        {
+          // layout: "lightHorizontalLines", // optional
+          table: {
+            // headers are automatically repeated if the table spans over multiple pages
+            // you can declare how many rows should be treated as headers
+            headerRows: 1,
+            widths: ["auto", "auto", "auto", "*", "*"],
+
+            body: [["#", "Car number", "Date", "Camera", "Ip"]]
+          }
+        }
+      ],
+      styles: {
+        subheader: {
+          fontSize: 16,
+          bold: true,
+          margin: 10
+        }
+      }
+    };
+
+    let data = _.find(props.results.searchResult, ["id", id]);
+    data.data.map((d, index) =>
+      docDefinition.content[1].table.body.push([
+        index,
+        d.car_number,
+        d.the_date,
+        d.camera,
+        renderPostName(d.ip)
+      ])
+    );
+
+    pdfMake.tableLayouts = {
+      exampleLayout: {
+        hLineWidth: function(i, node) {
+          if (i === 0 || i === node.table.body.length) {
+            return 0;
+          }
+          return i === node.table.headerRows ? 2 : 1;
+        },
+        vLineWidth: function(i) {
+          return 0;
+        },
+        hLineColor: function(i) {
+          return i === 1 ? "black" : "#aaa";
+        },
+        paddingLeft: function(i) {
+          return i === 0 ? 0 : 8;
+        },
+        paddingRight: function(i, node) {
+          return i === node.table.widths.length - 1 ? 0 : 8;
+        }
+      }
+    };
+
+    // download the PDF
+    pdfMake.createPdf(docDefinition).download("file.pdf");
+  };
+
+  const renderPostName = ip => {
+    let name = "";
+    props.posts.map(p => {
+      p.options.map(o => {
+        if (o.value === ip) name = o.label;
+        return false;
+      });
+      return false;
+    });
+    return name;
+  };
+
+  const onLogOut = e => {
+    e.preventDefault();
+    localStorage.removeItem("token");
+    props.history.push("/");
   };
 
   const onSubmit = formData => event => {
@@ -170,6 +329,12 @@ function Dashboard(props) {
 
   return (
     <div className={classes.root}>
+      {isLightBoxVisible && (
+        <Lightbox
+          mainSrc={image}
+          onCloseRequest={() => setLightBoxVisibilty(false)}
+        />
+      )}
       <CssBaseline />
       <AppBar
         position="absolute"
@@ -195,12 +360,10 @@ function Dashboard(props) {
             noWrap
             className={classes.title}
           >
-            Dashboard
+            Қидирув
           </Typography>
           <IconButton color="inherit">
-            <Badge badgeContent={4} color="secondary">
-              <NotificationsIcon />
-            </Badge>
+            <ExitToAppIcon onClick={onLogOut} />
           </IconButton>
         </Toolbar>
       </AppBar>
@@ -235,7 +398,7 @@ function Dashboard(props) {
             {/* *** Regions DIV */}
             <Grid item xs={12} md={3} lg={2}>
               <Paper className={fixedHeightPaper}>
-                <SerachList
+                <SearchList
                   onListSelect={onListSelect}
                   selectedListIndex={selectedListIndex}
                 />
@@ -244,19 +407,28 @@ function Dashboard(props) {
             {/* *** Table DIV *** */}
             <Grid item xs={12} md={9} lg={10}>
               <Paper className={fixedHeightPaper}>
-                <CustomTable selectedListIndex={selectedListIndex} />
+                <CustomTable
+                  selectedListIndex={selectedListIndex}
+                  onMoreClick={onMoreClick}
+                  onDoubleRowClick={onDoubleClick}
+                  onPrintClick={onPrintClick}
+                  renderPostName={renderPostName}
+                  isMoreLoading={isMoreLoading}
+                />
               </Paper>
             </Grid>
           </Grid>
         </Container>
-        <Copyright />
+        {/* <Copyright /> */}
       </main>
     </div>
   );
 }
 
-const mapStateToProps = ({ regions }) => ({
-  regions
+const mapStateToProps = ({ regions, posts, results }) => ({
+  regions,
+  posts,
+  results
 });
 
 const mapDispatchToProps = dispatch => ({
@@ -265,7 +437,4 @@ const mapDispatchToProps = dispatch => ({
   setResultCount: data => dispatch(setResultCount(data))
 });
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Dashboard);
+export default connect(mapStateToProps, mapDispatchToProps)(Dashboard);

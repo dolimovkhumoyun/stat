@@ -1,7 +1,6 @@
 import { makeStyles } from "@material-ui/core/styles";
 import InputLabel from "@material-ui/core/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem";
-import FormHelperText from "@material-ui/core/FormHelperText";
 import FormControl from "@material-ui/core/FormControl";
 import Select from "@material-ui/core/Select";
 import TextField from "@material-ui/core/TextField";
@@ -12,18 +11,15 @@ import Fab from "@material-ui/core/Fab";
 import SearchIcon from "@material-ui/icons/Search";
 
 import { MuiPickersUtilsProvider, DateTimePicker } from "material-ui-pickers";
-
 // pick utils
 import MomentUtils from "@date-io/moment";
 
 import React, { useEffect, useState } from "react";
 import { connect } from "react-redux";
 import { getRegions, getPosts, setForm } from "../../redux/actions";
-import useLoginForm from "../../hooks/CustomHooks";
 
 import _ from "lodash";
 import moment from "moment";
-import { isIP } from "net";
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -74,9 +70,7 @@ const SearchBar = props => {
   const startOfDay = moment()
     .startOf("day")
     .format(formatTime);
-  const endOfDay = moment()
-    .endOf("day")
-    .format(formatTime);
+  const endOfDay = moment().format(formatTime);
 
   // ComponenentDidMount
   useEffect(() => {
@@ -126,15 +120,17 @@ const SearchBar = props => {
           return false;
         }
       });
+      return false;
     });
 
     selectedRegionLabels.map(s => {
       props.posts.map(p => {
-        if (p.label == s) {
+        if (p.label === s) {
           selectedPosts.push(p.options);
           return false;
         }
       });
+      return false;
     });
 
     selectedPosts.map(s => {
@@ -142,6 +138,7 @@ const SearchBar = props => {
         if (!o.isDisabled) selectedPostIds.push(o.value);
         return false;
       });
+      return false;
     });
 
     var allPostIds = props.posts.map(post =>
@@ -171,8 +168,11 @@ const SearchBar = props => {
       props.posts.map(p => {
         p.options.map(o => {
           if (post === o.value) selectedRegions.push(p.label);
+          return false;
         });
+        return false;
       });
+      return false;
     });
 
     selectedRegions = _.sortedUniq(selectedRegions);
@@ -262,13 +262,12 @@ const SearchBar = props => {
     };
     props.setForm(formData);
   };
-
   return (
     <React.Fragment>
       <form className={classes.root} autoComplete="off" onSubmit={onSubmit}>
         <FormControl className={classes.formControl}>
           <InputLabel shrink htmlFor="age-label-placeholder">
-            Type
+            Турлари
           </InputLabel>
           <Select
             required
@@ -278,9 +277,9 @@ const SearchBar = props => {
             value={inputs.type}
             onChange={handleInputChange}
           >
-            <MenuItem value={"all"}>All</MenuItem>
-            <MenuItem value={"1"}>Wanted</MenuItem>
-            <MenuItem value={"0"}>Not Wanted</MenuItem>
+            <MenuItem value={"all"}>Жами</MenuItem>
+            <MenuItem value={"1"}>Қидирувда</MenuItem>
+            <MenuItem value={"0"}>Қидирувда эмас</MenuItem>
           </Select>
         </FormControl>
         <FormControl className={classes.formControl}>
@@ -288,7 +287,7 @@ const SearchBar = props => {
             <DateTimePicker
               autoOk
               ampm={false}
-              label="Start Date"
+              label="Бошланг'ич вақт"
               format="YYYY-MM-DD HH:mm:ss"
               name="startDate"
               value={startDate}
@@ -305,7 +304,7 @@ const SearchBar = props => {
               ampm={false}
               disableFuture
               format="YYYY-MM-DD HH:mm:ss"
-              label="End Date"
+              label="Тугаш вақт"
               name="endDate"
               value={endDate}
               onChange={dateTime => {
@@ -317,7 +316,7 @@ const SearchBar = props => {
         <FormControl className={classes.formControl}>
           <TextField
             id="standard-uncontrolled"
-            label="Car Number"
+            label="Автомобил ДРБ:"
             defaultValue=""
             margin="none"
             name="carNumber"
@@ -328,7 +327,7 @@ const SearchBar = props => {
 
         <FormControl className={classes.formControlSelect}>
           <InputLabel htmlFor="select-multiple-checkbox" required>
-            Regions
+            Вилоятлар
           </InputLabel>
           <Select
             multiple
@@ -363,7 +362,7 @@ const SearchBar = props => {
           </Select>
         </FormControl>
         <FormControl className={classes.formControlSelect}>
-          <InputLabel htmlFor="select-multiple-checkbox">Posts</InputLabel>
+          <InputLabel htmlFor="select-multiple-checkbox">ЙПХ маскан</InputLabel>
           <Select
             required
             multiple
@@ -430,7 +429,4 @@ const mapDispatchToProps = dispatch => ({
   setForm: data => dispatch(setForm(data))
 });
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(SearchBar);
+export default connect(mapStateToProps, mapDispatchToProps)(SearchBar);

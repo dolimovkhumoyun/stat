@@ -71,6 +71,12 @@ const SearchBar = props => {
     .startOf("day")
     .format(formatTime);
   const endOfDay = moment().format(formatTime);
+  const [inputs, setInputs] = useState({ carNumber: "", type: "all" });
+  const [startDate, setStartDate] = useState(startOfDay);
+  const [endDate, setEndDate] = useState(endOfDay);
+  const [regions, setRegions] = useState([]);
+  const [isSelectAllClicked, setSelectAll] = useState(true);
+  const [posts, setPosts] = useState([]);
 
   // ComponenentDidMount
   useEffect(() => {
@@ -81,16 +87,10 @@ const SearchBar = props => {
   useEffect(() => {
     if (props.regions.length !== 0) {
       const regionIds = _.map(props.regions, "value");
+      setRegions(regionIds);
       props.getPosts(regionIds);
     }
   }, [props.regions]);
-
-  const [inputs, setInputs] = useState({ carNumber: "", type: "all" });
-  const [startDate, setStartDate] = useState(startOfDay);
-  const [endDate, setEndDate] = useState(endOfDay);
-  const [regions, setRegions] = useState([]);
-  const [isSelectAllClicked, setSelectAll] = useState(false);
-  const [posts, setPosts] = useState([]);
 
   const handleInputChange = e => {
     let value = e.target.value;
@@ -267,7 +267,7 @@ const SearchBar = props => {
       <form className={classes.root} autoComplete="off" onSubmit={onSubmit}>
         <FormControl className={classes.formControl}>
           <InputLabel shrink htmlFor="age-label-placeholder">
-            Турлари
+            Turlari
           </InputLabel>
           <Select
             required
@@ -287,7 +287,8 @@ const SearchBar = props => {
             <DateTimePicker
               autoOk
               ampm={false}
-              label="Бошланг'ич вақт"
+              label="Boshlanish vaqti
+              "
               format="YYYY-MM-DD HH:mm:ss"
               name="startDate"
               value={startDate}
@@ -304,7 +305,8 @@ const SearchBar = props => {
               ampm={false}
               disableFuture
               format="YYYY-MM-DD HH:mm:ss"
-              label="Тугаш вақт"
+              label="Tugash vaqti
+              "
               name="endDate"
               value={endDate}
               onChange={dateTime => {
@@ -316,7 +318,7 @@ const SearchBar = props => {
         <FormControl className={classes.formControl}>
           <TextField
             id="standard-uncontrolled"
-            label="Автомобил ДРБ:"
+            label="Avtomobil D.R.B."
             defaultValue=""
             margin="none"
             name="carNumber"
@@ -327,7 +329,7 @@ const SearchBar = props => {
 
         <FormControl className={classes.formControlSelect}>
           <InputLabel htmlFor="select-multiple-checkbox" required>
-            Вилоятлар
+            Viloyatlar 
           </InputLabel>
           <Select
             multiple
@@ -362,7 +364,9 @@ const SearchBar = props => {
           </Select>
         </FormControl>
         <FormControl className={classes.formControlSelect}>
-          <InputLabel htmlFor="select-multiple-checkbox">ЙПХ маскан</InputLabel>
+          <InputLabel htmlFor="select-multiple-checkbox">
+            YPX maskani
+          </InputLabel>
           <Select
             required
             multiple

@@ -23,19 +23,19 @@ import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 const columns = [
   {
     id: "ip",
-    label: "ЙПХ масканлари"
+    label: "YPX maskanlari"
   },
   {
     id: "camera",
-    label: "	Йўналиш"
+    label: "Yo‘nalish"
   },
   {
     id: "date",
-    label: "Сана ва вакт"
+    label: "Sana va vaqt"
   },
   {
     id: "car_number",
-    label: "Давлат ДРБ"
+    label: "Avtomobil D.R.B"
   }
 ];
 
@@ -85,23 +85,22 @@ const CustomTable = props => {
   const { searchResult, searchResultCount } = props.results;
   if (
     searchResult !== undefined &&
+    _.findIndex(searchResult, ["id", props.selectedListIndex]) !== -1 &&
+    searchResultCount !== undefined &&
     _.findIndex(searchResult, ["id", props.selectedListIndex]) !== -1
   ) {
-    let data =
-      searchResult[_.findIndex(searchResult, ["id", props.selectedListIndex])]
-        .data;
-    let count =
-      searchResultCount[
-        _.findIndex(searchResult, ["id", props.selectedListIndex])
-      ].count;
+    let res = _.find(searchResult, ["id", props.selectedListIndex]);
+    let data = res && res.data ? res.data : [];
 
+    let numRes = _.find(searchResultCount, ["id", props.selectedListIndex]);
+    let count = numRes && numRes.count ? numRes.count : "-";
     return (
       <React.Fragment>
         <Paper className={classes.root}>
           <Grid item xs={4}>
             {" "}
             <Box fontFamily="fontFamily" m={1}>
-              {`Намойиш этилаябди  ${data.length} та ёзув ${count} тадан.`}
+              {`Namoyish etilayabdi  ${data.length} ta yozuv ${count} tadan.`}
             </Box>
           </Grid>
           <Grid item xs={4}>
@@ -114,7 +113,7 @@ const CustomTable = props => {
               startIcon={<GetAppIcon />}
               onClick={() => props.onPrintClick(props.selectedListIndex)}
             >
-              Юклаб олиш
+              Yuklab Olish
             </Button>
           </Grid>
 
@@ -132,7 +131,7 @@ const CustomTable = props => {
                 </TableRow>
               </TableHead>
               <TableBody className={`table_${props.selectedListIndex}`}>
-                {data.length === 0 ? (
+                {data.length === 0 && data ? (
                   <Empty
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
                     description={false}
@@ -179,7 +178,7 @@ const CustomTable = props => {
           ) : (
             <KeyboardArrowDownIcon className={classes.extendedIcon} />
           )}
-          Кўпрок натижалар
+          Ko‘proq natijalar
         </Button>
       </React.Fragment>
     );

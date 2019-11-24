@@ -56,6 +56,7 @@ export default function Login(props) {
   const classes = useStyles();
 
   useEffect(() => {
+    document.title = "FizmaSoft";
     if (localStorage.getItem("token")) {
       props.history.push("/dashboard");
     }
@@ -93,7 +94,7 @@ export default function Login(props) {
       <div className={classes.paper}>
         {/* <Avatar className={classes.avatar} src={"/favicon.ico"}></Avatar> */}
         <Typography component="h1" variant="h5">
-          Тизимга кириш
+          Tizimga kirish
         </Typography>
         <form className={classes.form} noValidate onSubmit={handleSubmit}>
           <TextField
@@ -102,7 +103,7 @@ export default function Login(props) {
             required
             fullWidth
             id="email"
-            label="Username"
+            label="Foydalanuvchi nomi"
             name="username"
             autoComplete="off"
             autoFocus
@@ -115,7 +116,7 @@ export default function Login(props) {
             required
             fullWidth
             name="password"
-            label="Password"
+            label="Parol"
             type="password"
             id="password"
             autoComplete="new-password"
@@ -130,7 +131,7 @@ export default function Login(props) {
             color="primary"
             className={classes.submit}
           >
-            Кириш
+            Kirish
           </Button>
         </form>
       </div>

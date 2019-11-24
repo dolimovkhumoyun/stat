@@ -21,7 +21,14 @@ import ExitToAppIcon from "@material-ui/icons/ExitToApp";
 
 import React, { useEffect, useState } from "react";
 import { connect } from "react-redux";
-import { getRegions, setResult, setResultCount } from "../redux/actions";
+import {
+  getRegions,
+  setResult,
+  setResultCount,
+  getResult,
+  setForm,
+  setPdfResult
+} from "../redux/actions";
 import SearchBar from "./common/SearchBar";
 import SearchList from "./common/SearchList";
 import CustomTable from "./common/CustomTable";
@@ -32,18 +39,8 @@ import pdfFonts from "pdfmake/build/vfs_fonts";
 import _ from "lodash";
 import Lightbox from "react-image-lightbox";
 import "react-image-lightbox/style.css";
-// function Copyright() {
-//   return (
-//     <Typography variant="body2" color="textSecondary" align="center">
-//       {"Copyright © "}
-//       <Link color="inherit" href="http://fizmasoft.uz/">
-//         FizmaSoft
-//       </Link>{" "}
-//       {new Date().getFullYear()}
-//       {"."}
-//     </Typography>
-//   );
-// }
+
+import LoadingOverlay from "react-loading-overlay";
 
 const drawerWidth = 240;
 
@@ -162,8 +159,10 @@ function Dashboard(props) {
   const [image, setImage] = useState(null);
   const [isLightBoxVisible, setLightBoxVisibilty] = useState(false);
   const [isMoreLoading, setMoreLoading] = useState(false);
+  const [isActiveLoader, setActiveLoader] = useState(false);
 
   useEffect(() => {
+    document.title = "FizmaSoft";
     props.getRegions();
     socket.on("search", data => {
       props.setResult(data);
@@ -179,6 +178,7 @@ function Dashboard(props) {
     });
     socket.once("err", data => {
       if (data.status === 401) {
+        localStorage.removeItem("token");
         props.history.push({
           pathname: "/",
           state: { err: 401 }
@@ -186,6 +186,21 @@ function Dashboard(props) {
       }
     });
   }, []);
+
+  useEffect(() => {
+    if (props.results.pdfResult && props.results.formData) {
+      // printAllData(header, startDate, endDate, data);
+      let { startDate, endDate } = props.results.formData;
+      const { pdfResult } = props.results;
+      let regionName = _.find(props.regions, ["value", selectedListIndex]);
+      let headers = {
+        regionName: regionName.label,
+        startDate,
+        endDate
+      };
+      printAllData(headers, pdfResult);
+    }
+  }, [props.results.pdfResult]);
 
   const onListSelect = (event, index) => {
     // console.log(event.target);
@@ -239,9 +254,38 @@ function Dashboard(props) {
 
   const onPrintClick = id => {
     pdfMake.vfs = pdfFonts.pdfMake.vfs;
-    let rgn = _.find(props.regions, ["value", id]); // finding region
-    const { startDate, endDate } = props.results.formData;
-    let header = `${rgn.label}  ${startDate} дан - ${endDate} гача`;
+    const { startDate, endDate, type, carNumber } = props.results.formData;
+    const forms = {
+      type,
+      carNumber,
+      startDate,
+      endDate,
+      direction: [id],
+      spr: [id],
+      pdf: true
+    };
+    setActiveLoader(true);
+    props.getResult(forms);
+    socket.on("pdf", data => {
+      setActiveLoader(false);
+      props.setPdfResult(data);
+    });
+  };
+
+  const renderPostName = ip => {
+    let name = "";
+    props.posts.map(p => {
+      p.options.map(o => {
+        if (o.value === ip) name = o.label;
+        return false;
+      });
+      return false;
+    });
+    return name;
+  };
+
+  const printAllData = (headers, data) => {
+    let header = `${headers.regionName}   ${headers.startDate} dan  -  ${headers.endDate} gacha `;
     var docDefinition = {
       content: [
         { text: header, style: "subheader" },
@@ -251,9 +295,17 @@ function Dashboard(props) {
             // headers are automatically repeated if the table spans over multiple pages
             // you can declare how many rows should be treated as headers
             headerRows: 1,
-            widths: ["auto", "auto", "auto", "*", "*"],
+            widths: ["auto", "*", "*", "auto", "auto"],
 
-            body: [["#", "Car number", "Date", "Camera", "Ip"]]
+            body: [
+              [
+                "#",
+                "YPX maskanlari",
+                "Yo‘nalish",
+                "Sana va vaqt",
+                "Avtomobil D.R.B"
+              ]
+            ]
           }
         }
       ],
@@ -265,15 +317,14 @@ function Dashboard(props) {
         }
       }
     };
-
-    let data = _.find(props.results.searchResult, ["id", id]);
-    data.data.map((d, index) =>
+    // console.log(data);
+    data.map((d, index) =>
       docDefinition.content[1].table.body.push([
-        index,
-        d.car_number,
-        d.the_date,
+        index + 1,
         d.camera,
-        renderPostName(d.ip)
+        renderPostName(d.ip),
+        d.the_date,
+        d.car_number
       ])
     );
 
@@ -301,20 +352,24 @@ function Dashboard(props) {
     };
 
     // download the PDF
-    pdfMake.createPdf(docDefinition).download("file.pdf");
+    pdfMake
+      .createPdf(docDefinition)
+      .download(
+        `${headers.regionName}_${headers.startDate}-${headers.endDate}.pdf`
+      );
   };
 
-  const renderPostName = ip => {
-    let name = "";
-    props.posts.map(p => {
-      p.options.map(o => {
-        if (o.value === ip) name = o.label;
-        return false;
-      });
-      return false;
-    });
-    return name;
-  };
+  // const renderPostName = ip => {
+  //   let name = "";
+  //   props.posts.map(p => {
+  //     p.options.map(o => {
+  //       if (o.value === ip) name = o.label;
+  //       return false;
+  //     });
+  //     return false;
+  //   });
+  //   return name;
+  // };
 
   const onLogOut = e => {
     e.preventDefault();
@@ -328,100 +383,106 @@ function Dashboard(props) {
   };
 
   return (
-    <div className={classes.root}>
-      {isLightBoxVisible && (
-        <Lightbox
-          mainSrc={image}
-          onCloseRequest={() => setLightBoxVisibilty(false)}
-        />
-      )}
-      <CssBaseline />
-      <AppBar
-        position="absolute"
-        className={clsx(classes.appBar, open && classes.appBarShift)}
-      >
-        <Toolbar className={classes.toolbar}>
-          <IconButton
-            edge="start"
-            color="inherit"
-            aria-label="open drawer"
-            onClick={handleDrawerOpen}
-            className={clsx(
-              classes.menuButton,
-              open && classes.menuButtonHidden
-            )}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography
-            component="h1"
-            variant="h6"
-            color="inherit"
-            noWrap
-            className={classes.title}
-          >
-            Қидирув
-          </Typography>
-          <IconButton color="inherit">
-            <ExitToAppIcon onClick={onLogOut} />
-          </IconButton>
-        </Toolbar>
-      </AppBar>
-      <Drawer
-        variant="permanent"
-        classes={{
-          paper: clsx(classes.drawerPaper, !open && classes.drawerPaperClose)
-        }}
-        open={open}
-      >
-        <div className={classes.toolbarIcon}>
-          <IconButton onClick={handleDrawerClose}>
-            <ChevronLeftIcon />
-          </IconButton>
-        </div>
-        <Divider />
-        <List>{mainListItems}</List>
+    <LoadingOverlay
+      active={isActiveLoader}
+      spinner
+      text="Ma'lumotlar yuklanmoqda..."
+    >
+      <div className={classes.root}>
+        {isLightBoxVisible && (
+          <Lightbox
+            mainSrc={image}
+            onCloseRequest={() => setLightBoxVisibilty(false)}
+          />
+        )}
+        <CssBaseline />
+        <AppBar
+          position="absolute"
+          className={clsx(classes.appBar, open && classes.appBarShift)}
+        >
+          <Toolbar className={classes.toolbar}>
+            <IconButton
+              edge="start"
+              color="inherit"
+              aria-label="open drawer"
+              onClick={handleDrawerOpen}
+              className={clsx(
+                classes.menuButton,
+                open && classes.menuButtonHidden
+              )}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography
+              component="h1"
+              variant="h6"
+              color="inherit"
+              noWrap
+              className={classes.title}
+            >
+              Qidiruv
+            </Typography>
+            <IconButton color="inherit">
+              <ExitToAppIcon onClick={onLogOut} />
+            </IconButton>
+          </Toolbar>
+        </AppBar>
+        <Drawer
+          variant="permanent"
+          classes={{
+            paper: clsx(classes.drawerPaper, !open && classes.drawerPaperClose)
+          }}
+          open={open}
+        >
+          <div className={classes.toolbarIcon}>
+            <IconButton onClick={handleDrawerClose}>
+              <ChevronLeftIcon />
+            </IconButton>
+          </div>
+          <Divider />
+          <List>{mainListItems}</List>
 
-        <Divider />
-        {/* <List>{secondaryListItems}</List> */}
-      </Drawer>
-      <main className={classes.content}>
-        <div className={classes.appBarSpacer} />
-        <Container maxWidth="xl" className={classes.container}>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              {/* *** Search DIV*** */}
-              <Paper className={classes.paper}>
-                <SearchBar onSubmit={formData => onSubmit(formData)} />
-              </Paper>
+          <Divider />
+          {/* <List>{secondaryListItems}</List> */}
+        </Drawer>
+        <main className={classes.content}>
+          <div className={classes.appBarSpacer} />
+          <Container maxWidth="xl" className={classes.container}>
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                {/* *** Search DIV*** */}
+                <Paper className={classes.paper}>
+                  <SearchBar onSubmit={formData => onSubmit(formData)} />
+                </Paper>
+              </Grid>
+              {/* *** Regions DIV */}
+              <Grid item xs={12} md={3} lg={2}>
+                <Paper className={fixedHeightPaper}>
+                  <SearchList
+                    onListSelect={onListSelect}
+                    selectedListIndex={selectedListIndex}
+                  />
+                </Paper>
+              </Grid>
+              {/* *** Table DIV *** */}
+              <Grid item xs={12} md={9} lg={10}>
+                <Paper className={fixedHeightPaper}>
+                  <CustomTable
+                    selectedListIndex={selectedListIndex}
+                    onMoreClick={onMoreClick}
+                    onDoubleRowClick={onDoubleClick}
+                    onPrintClick={onPrintClick}
+                    renderPostName={renderPostName}
+                    isMoreLoading={isMoreLoading}
+                  />
+                </Paper>
+              </Grid>
             </Grid>
-            {/* *** Regions DIV */}
-            <Grid item xs={12} md={3} lg={2}>
-              <Paper className={fixedHeightPaper}>
-                <SearchList
-                  onListSelect={onListSelect}
-                  selectedListIndex={selectedListIndex}
-                />
-              </Paper>
-            </Grid>
-            {/* *** Table DIV *** */}
-            <Grid item xs={12} md={9} lg={10}>
-              <Paper className={fixedHeightPaper}>
-                <CustomTable
-                  selectedListIndex={selectedListIndex}
-                  onMoreClick={onMoreClick}
-                  onDoubleRowClick={onDoubleClick}
-                  onPrintClick={onPrintClick}
-                  renderPostName={renderPostName}
-                  isMoreLoading={isMoreLoading}
-                />
-              </Paper>
-            </Grid>
-          </Grid>
-        </Container>
-        {/* <Copyright /> */}
-      </main>
-    </div>
+          </Container>
+          {/* <Copyright /> */}
+        </main>
+      </div>
+    </LoadingOverlay>
   );
 }
 
@@ -433,8 +494,10 @@ const mapStateToProps = ({ regions, posts, results }) => ({
 
 const mapDispatchToProps = dispatch => ({
   getRegions: () => dispatch(getRegions()),
+  getResult: data => dispatch(getResult(data)),
   setResult: data => dispatch(setResult(data)),
-  setResultCount: data => dispatch(setResultCount(data))
+  setResultCount: data => dispatch(setResultCount(data)),
+  setPdfResult: data => dispatch(setPdfResult(data))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Dashboard);

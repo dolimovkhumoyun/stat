@@ -7,7 +7,8 @@ import {
   SET_RESULT,
   GET_RESULT,
   SET_RESULT_COUNT,
-  RESET_RESULTS
+  RESET_RESULTS,
+  SET_PDF_RESULT
 } from "../constants";
 
 const getRegions = () => ({
@@ -53,6 +54,11 @@ const resetResults = () => ({
   type: RESET_RESULTS
 });
 
+const setPdfResult = data => ({
+  type: SET_PDF_RESULT,
+  payload: data
+});
+
 export {
   getRegions,
   setRegions,
@@ -62,5 +68,6 @@ export {
   getResult,
   setResult,
   setResultCount,
-  resetResults
+  resetResults,
+  setPdfResult
 };

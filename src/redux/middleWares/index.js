@@ -1,5 +1,11 @@
 import io from "socket.io-client";
-import { GET_REGIONS, GET_POSTS, SET_FORM } from "../constants";
+import {
+  GET_REGIONS,
+  GET_POSTS,
+  SET_FORM,
+  GET_RESULT,
+  SET_PDF_RESULT
+} from "../constants";
 import { setRegions, setPosts, resetResults } from "../actions";
 
 export const socket = io("101.4.0.254:8878/api");
@@ -45,6 +51,12 @@ export function searchResultMIddleware({ dispatch, getState }) {
         dispatch(resetResults());
         socket.emit("search", { ...formData, token });
       }
+      if (action.type === GET_RESULT) {
+        const token = localStorage.getItem("token");
+        const formData = action.payload;
+        socket.emit("search", { ...formData, token });
+      }
+
       return next(action);
     };
   };

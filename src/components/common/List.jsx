@@ -14,7 +14,7 @@ export const mainListItems = (
         <SearchIcon />
       </ListItemIcon>
       <ListItemText
-        primary="Қидирув
+        primary="Qidiruv
 "
       />
     </ListItem>
@@ -23,7 +23,7 @@ export const mainListItems = (
       <ListItemIcon>
         <BarChartIcon />
       </ListItemIcon>
-      <ListItemText primary="Статистика" />
+      <ListItemText primary="Statistika" />
     </ListItem>
     {/* <ListItem button>
       <ListItemIcon>

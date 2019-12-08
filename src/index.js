@@ -11,7 +11,7 @@ import * as serviceWorker from "./serviceWorker";
 
 ReactDOM.render(
   <Provider store={store}>
-    <BrowserRouter basename="/stat">
+    <BrowserRouter basename="/">
       <App />
     </BrowserRouter>
   </Provider>,

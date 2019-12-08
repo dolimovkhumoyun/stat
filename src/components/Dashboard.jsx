@@ -26,7 +26,6 @@ import {
   setResult,
   setResultCount,
   getResult,
-  setForm,
   setPdfResult
 } from "../redux/actions";
 import SearchBar from "./common/SearchBar";
@@ -358,18 +357,6 @@ function Dashboard(props) {
         `${headers.regionName}_${headers.startDate}-${headers.endDate}.pdf`
       );
   };
-
-  // const renderPostName = ip => {
-  //   let name = "";
-  //   props.posts.map(p => {
-  //     p.options.map(o => {
-  //       if (o.value === ip) name = o.label;
-  //       return false;
-  //     });
-  //     return false;
-  //   });
-  //   return name;
-  // };
 
   const onLogOut = e => {
     e.preventDefault();

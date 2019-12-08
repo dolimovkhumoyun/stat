@@ -117,8 +117,8 @@ const SearchBar = props => {
       props.regions.map(regs => {
         if (regs.value === r) {
           selectedRegionLabels.push(regs.label);
-          return false;
         }
+        return false;
       });
       return false;
     });
@@ -127,8 +127,8 @@ const SearchBar = props => {
       props.posts.map(p => {
         if (p.label === s) {
           selectedPosts.push(p.options);
-          return false;
         }
+        return false;
       });
       return false;
     });
@@ -181,7 +181,9 @@ const SearchBar = props => {
         if (s === r.label) {
           selectedRegionIds.push(r.value);
         }
+        return false;
       });
+      return false;
     });
     selectedRegionIds = _.union(regions, selectedRegionIds);
     setRegions(selectedRegionIds);
@@ -192,7 +194,7 @@ const SearchBar = props => {
   const renderRegionsValue = values => {
     if (props.regions.length !== 0) {
       var d = [];
-      let i = 0;
+      var i = 0;
 
       props.regions.map(region =>
         values.map(id => {
@@ -205,6 +207,7 @@ const SearchBar = props => {
 
             d.push(region.label);
           }
+          return false;
         })
       );
     }
@@ -228,7 +231,9 @@ const SearchBar = props => {
 
               d.push(option.label);
             }
+            return false;
           });
+          return false;
         })
       );
     }
@@ -250,6 +255,7 @@ const SearchBar = props => {
       if (isIP(p)) {
         tmpPosts.push(p);
       }
+      return false;
     });
     const formData = {
       carNumber: inputs.carNumber,
@@ -319,7 +325,6 @@ const SearchBar = props => {
           <TextField
             id="standard-uncontrolled"
             label="Avtomobil D.R.B."
-            defaultValue=""
             margin="none"
             name="carNumber"
             value={inputs.carNumber || ""}

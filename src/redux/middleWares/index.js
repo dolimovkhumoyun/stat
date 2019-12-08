@@ -1,11 +1,5 @@
 import io from "socket.io-client";
-import {
-  GET_REGIONS,
-  GET_POSTS,
-  SET_FORM,
-  GET_RESULT,
-  SET_PDF_RESULT
-} from "../constants";
+import { GET_REGIONS, GET_POSTS, SET_FORM, GET_RESULT } from "../constants";
 import { setRegions, setPosts, resetResults } from "../actions";
 
 export const socket = io("101.4.0.254:8878/api");

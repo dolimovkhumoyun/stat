@@ -73,7 +73,7 @@ const SearchList = props => {
     <div className={classes.root}>
       <List component="nav" aria-label="main mailbox folders">
         {searchedRegions.map(s => (
-          <React.Fragment>
+          <React.Fragment key={s.value}>
             <ListItem
               button
               selected={props.selectedListIndex === s.value}
